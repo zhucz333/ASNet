@@ -30,3 +30,15 @@
 *.exe
 *.out
 *.app
+/bin
+/lib
+/src/ASNet/vs2017/ASNet/.vs/ASNet/v15/ipch/AutoPCH
+/src/ASNet/vs2017/ASNet/ASNet/Win32
+/src/ASNet/vs2017/ASNet/ASNet/x64
+/src/ASNet/vs2017/ASNet/.vs
+/src/ASNet/vs2017/test/client/client/Win32
+/src/ASNet/vs2017/test/client/client/x64
+/src/ASNet/vs2017/test/server/server/Win32
+/src/ASNet/vs2017/test/server/server/x64
+/src/ASNet/vs2017/test/Win32/Debug
+/src/ASNet/vs2017/test/x64/Debug

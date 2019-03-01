@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <Root>$(SolutionDir)..\..\..\..\</Root>
+    <BinPath>$(Root)bin\</BinPath>
+    <IncPath>$(Root)include\</IncPath>
+    <TempPath>$(ProjectDir)$(Platform)\$(Configuration)\</TempPath>
+    <TargetBin>$(ProjectName).$(PlatformTarget).$(Configuration)</TargetBin>
+    <LibPath>$(Root)lib\</LibPath>
+    <SrcPath>$(Root)src\</SrcPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(BinPath)</OutDir>
+    <IntDir>$(TempPath)</IntDir>
+    <TargetName>$(TargetBin)</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>../../../include;../../../../../../include;$(IncPath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>ASNETAPI_EXPORTS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>../../../lib;../../../../../../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImportLibrary>$(LibPath)\$(TargetBin).lib</ImportLibrary>
+      <AdditionalDependencies>MThread.$(PlatformShortName).$(Configuration).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <Lib>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Lib>
+    <PostBuildEvent>
+      <Message>
+      </Message>
+      <Command>copy /Y $(SrcPath)ASNet\IASNetAPI.h $(IncPath);
+copy /Y $(SrcPath)ASNet\IASNetAPIClientSPI.h $(IncPath);
+copy /Y $(SrcPath)ASNet\IASNetAPIPacketHelper.h $(IncPath);</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="Root">
+      <Value>$(Root)</Value>
+    </BuildMacro>
+    <BuildMacro Include="BinPath">
+      <Value>$(BinPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="IncPath">
+      <Value>$(IncPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="TempPath">
+      <Value>$(TempPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="TargetBin">
+      <Value>$(TargetBin)</Value>
+    </BuildMacro>
+    <BuildMacro Include="LibPath">
+      <Value>$(LibPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="SrcPath">
+      <Value>$(SrcPath)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
