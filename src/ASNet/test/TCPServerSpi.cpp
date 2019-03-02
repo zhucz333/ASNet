@@ -40,19 +40,8 @@ int TCPSeverSpi::Listen()
 
 	return 0;
 }
-int TCPSeverSpi::Send(int m_nSocketID)
+int TCPSeverSpi::Send(int m_nSocketID, std::string msg)
 {
-	if (++m_sendCount > 3) {
-		if (m_ptrNetAPI->Close(m_nSocketID)) {
-			std::cout << "Call close OK " << std::endl;
-		} else {
-			std::cout << "Call close failed " << std::endl;
-		}
-		return 0;
-	}
-	std::string msg("Hello World! ++ ");
-	msg = msg + std::to_string(m_sendCount);
-
 	std::string errMsg;
 	if (false == m_ptrNetAPI->Send(m_nSocketID, msg.c_str(), msg.size(), errMsg)) {
 		std::cout << "Call Send to " << m_strLocalIP.c_str() << ":" << m_nLocalPort << " ERROR! error:" << errMsg.c_str() << std::endl;
@@ -69,14 +58,14 @@ void TCPSeverSpi::OnAccept(int nListenSocketId, int nNewSocketId, const std::str
 }
 void TCPSeverSpi::OnConnect(int nSocketId, const std::string& strRemoteIP, unsigned short uRemotePort)
 {
-	std::cout << "connect to " << strRemoteIP.c_str() << ":" << uRemotePort << " OK" << std::endl;
-	Send(nSocketId);
+	;
 }
 
 void TCPSeverSpi::OnRecieve(int nSocketId, const char* pData, unsigned int nLen)
 {
 	std::cout << "RECV msg:" << pData << ", data len:"<< nLen << std::endl;
-	Send(nSocketId);
+	std::string msg(pData, nLen);
+	Send(nSocketId, msg);
 }
 
 void TCPSeverSpi::OnSend(int nSocketId, const char* pData, unsigned int nLen)

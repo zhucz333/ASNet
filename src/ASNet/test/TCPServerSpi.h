@@ -13,7 +13,7 @@ public:
 
 	int Run(std::string ip, int port);
 	int Listen();
-	int Send(int nSocketId);
+	int Send(int nSocketId, std::string msg);
 	int Close();
 
 	virtual void OnAccept(int nListenSocketId, int nNewSocketId, const std::string& strRemoteIP, unsigned short uRemotePort);
