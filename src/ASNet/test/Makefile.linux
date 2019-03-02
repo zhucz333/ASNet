@@ -16,6 +16,8 @@ TEST_SVR_OBJS = Server.o TCPServerSpi.o
 TEST_CLT_TARG = Client.$(ARCH).$(VERSION)
 TEST_CLT_OBJS = Client.o TCPClientSpi.o 
 
+all : $(TEST_SVR_TARG) $(TEST_CLT_TARG)
+
 $(TEST_SVR_TARG) : $(TEST_SVR_OBJS)
 	$(A)$(ECHO) "Linking   [test] file:[$@] ..."
 	$(A)$(CXX) $(CFLAGS) $(TEST_SVR_OBJS) $(INCPATH) $(BINPATH) $(OTHER_LIBS) $(LIBS) -o $(TARG_BIN_PATH)/$@
@@ -24,6 +26,6 @@ $(TEST_SVR_TARG) : $(TEST_SVR_OBJS)
 $(TEST_CLT_TARG) : $(TEST_CLT_OBJS)
 	$(A)$(ECHO) "Linking   [test] file:[$@] ..."
 	$(A)$(CXX) $(CFLAGS) $(TEST_CLT_OBJS) $(INCPATH) $(BINPATH) $(OTHER_LIBS) $(LIBS) -o $(TARG_BIN_PATH)/$@
-	$(A)$(RM) $(TEST_SVR_OBJS)
+	$(A)$(RM) $(TEST_CLT_OBJS)
 
 ##==============================================================================

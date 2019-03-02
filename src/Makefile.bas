@@ -28,8 +28,10 @@ OFLAG    = -O0 -std=c++2a
 
 ifeq ($(X86),$(ARCH))
 OFLAG += -m32
+COSFLAGS += -Wl,-rpath=/usr/local/gcc-8.2/lib32 
 else ifeq ($(X64),$(ARCH))
 OFLAG += -m64
+COSFLAGS += -Wl,-rpath=/usr/local/gcc-8.2/lib64 
 endif
 
 ##----------------------------------------------------------
