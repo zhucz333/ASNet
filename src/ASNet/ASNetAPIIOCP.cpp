@@ -175,7 +175,7 @@ bool ASNetAPIIOCP::DestroyClient(int nSocketId, std::string& errMsg)
 	}
 
 	if (ptrConn == nullptr) {
-		errMsg.append("socketID is not valid!");
+		errMsg.append("socketID is not valid, please Call CreateClient() first! socketId = " + std::to_string(nSocketId));
 		return false;
 	}
 
@@ -198,6 +198,11 @@ bool ASNetAPIIOCP::Listen(int nSocketId, int backlog, std::string& errMsg)
 		ptrConn = m_mapClient[nSocketId];
 	}
 
+	if (nullptr == ptrConn) {
+		errMsg.append("socketID is not valid, please Call CreateClient() first! socketId = " + std::to_string(nSocketId));
+		return false;
+	}
+
 	if (false == ptrConn->Listen(backlog, errMsg)) {
 		ptrConn->OnError(errMsg);
 		return false;
@@ -216,7 +221,7 @@ bool ASNetAPIIOCP::Connect(int nSocketId, const std::string& strServerIp, unsign
 	}
 
 	if (ptrConn == nullptr) {
-		errMsg.append("socketID is not valid, please Call CreateClient() first!");
+		errMsg.append("socketID is not valid, please Call CreateClient() first! socketId = " + std::to_string(nSocketId));
 		return false;
 	}
 
@@ -242,7 +247,7 @@ bool ASNetAPIIOCP::Send(int nSocketId, const char* pData, unsigned int nLen, std
 	}
 
 	if (ptrConn == nullptr) {
-		errMsg.append("socketID is not valid!");
+		errMsg.append("socketID is not valid, please Call CreateClient() first! socketId = " + std::to_string(nSocketId));
 		return false;
 	}
 
