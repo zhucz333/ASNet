@@ -2,23 +2,24 @@ include ../Makefile.bas
 A=
 
 ##==============================================================================
-INCPATH += -I./include -I$(SRC_ROOT)/../../include
-LIBPATH += -L$(SRC_ROOT)/../../lib
-BINPATH += -L$(SRC_ROOT)/../../bin
-OTHER_LIBS = -lMThread.$(ARCH).$(VERSION) 
+BINPATH = -L$(SRC_ROOT)/../../bin
+INCPATH = -I$(SRC_ROOT)/../../include -I./include
+LIBPATH = -L$(SRC_ROOT)/../../lib -L./lib
 
 TARG_BIN_PATH = $(SRC_ROOT)/../../bin
-TARG_INC_PATH = $(SRC_ROOT)/../../include
 TARG_LIB_PATH = $(SRC_ROOT)/../../lib
+TARG_INC_PATH = $(SRC_ROOT)/../../include
 
-BIN_TARG = libNet.$(ARCH).$(VERSION).so
+BIN_TARG = libASNet.$(ARCH).$(VERSION).so
 BIN_OBJS = ASNetAPIEpoll.o ConnectionEpoll.o EventEpoll.o
+
+OTHER_LIBS = -lMThread.$(ARCH).$(VERSION) 
 
 $(BIN_TARG): $(BIN_OBJS)
 	$(A)$(ECHO) "Linking   [bin] file:[$@] ..."
 	$(A)$(CXX) $(DLLFLAGS) $(CFLAGS) $(BIN_OBJS) $(INCPATH) $(LIBPATH) $(OTHER_LIBS) $(LIBS) -o $(TARG_BIN_PATH)/$@ 
 	$(A)$(RM) -f $(BIN_OBJS) 
-	$(A)$(CP) -f ./include/*.h $(TARG_INC_PATH) 
+	$(A)$(CP) -f ./ASNet*.h $(TARG_INC_PATH) 
 
 clean    :
 	$(A)$(RM) $(TARG_BIN_PATH)/$(BIN_TARG)
@@ -26,4 +27,6 @@ clean    :
 install  :
 	#$(A)$(CP) -fr ./$(ARCH)/$(VERSION)/$(BIN_TARG) $(TARGETS_PATH)/$(BIN_TARG)
 
+test    :
+	$(A)$(MAKE) -C test test 
 ##==============================================================================

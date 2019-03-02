@@ -1,4 +1,4 @@
-include ../Makefile.bas
+include ../../Makefile.bas
 A=
 
 all:
@@ -19,6 +19,9 @@ install  :
 	$(A)$(MAKE) install -f Makefile.linux ARCH=x86 VERSION=Debug
 	$(A)$(MAKE) install -f Makefile.linux ARCH=x86 VERSION=Release
 
-TEST  :
-	$(A)$(MAKE) -C test 
+test  :
+	$(A)$(MAKE) test -f Makefile.linux ARCH=x64 VERSION=Debug
+	$(A)$(MAKE) test -f Makefile.linux ARCH=x64 VERSION=Release
+	$(A)$(MAKE) test -f Makefile.linux ARCH=x86 VERSION=Debug
+	$(A)$(MAKE) test -f Makefile.linux ARCH=x86 VERSION=Release
 ##==============================================================================
