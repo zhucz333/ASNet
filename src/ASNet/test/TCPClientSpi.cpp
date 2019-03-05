@@ -30,13 +30,17 @@ int TCPClientSpi::Run(std::string ip, int port)
 int TCPClientSpi::Connect()
 {
 	std::string errMsg;
-	m_nSocketID = m_ptrNetAPI->CreateClient(this);
+	m_nSocketID = m_ptrNetAPI->CreateClient(this, nullptr, "127.0.0.1", 7777, ASNETAPI_UDP_CLIENT);
 	std::cout << "fd:" << m_nSocketID << std::endl; 
+
+	SendTo(m_nSocketID, m_strRemoteIP, m_nRemotePort);
+	/*
 	if (false == m_ptrNetAPI->Connect(m_nSocketID, m_strRemoteIP.c_str(), m_nRemotePort, errMsg)) {
 		std::cout << "Call connect to " << m_strRemoteIP.c_str() << ":" << m_nRemotePort << " ERROR! error:" << errMsg.c_str() << std::endl;
 		return -1;
 	}
 	std::cout << "Call connect to " << m_strRemoteIP.c_str() << ":" << m_nRemotePort << " OK, wait connect result!" << std::endl;
+	*/
 
 	return 0;
 }
@@ -62,6 +66,30 @@ int TCPClientSpi::Send(int m_nSocketID)
 
 	return 0;
 }
+
+int TCPClientSpi::SendTo(int nSocketId, const std::string& strRemoteIp, unsigned short nRemotePort)
+{
+	if (++m_sendCount > 3) {
+		if (m_ptrNetAPI->Close(m_nSocketID)) {
+			std::cout << "Call close OK " << std::endl;
+		}
+		else {
+			std::cout << "Call close failed " << std::endl;
+		}
+		return 0;
+	}
+	std::string msg("Hello World! ++ ");
+	msg = msg + std::to_string(m_sendCount);
+
+	std::string errMsg;
+	if (false == m_ptrNetAPI->SendTo(m_nSocketID, msg.c_str(), msg.size(), strRemoteIp, nRemotePort, errMsg)) {
+		std::cout << "Call Send to " << strRemoteIp.c_str() << ":" << nRemotePort << " ERROR! error:" << errMsg.c_str() << std::endl;
+		return 0;
+	}
+	std::cout << "Call Send to " << strRemoteIp.c_str() << ":" << nRemotePort << " OK, wait Send Result!" << std::endl;
+
+	return 0;
+}
 void TCPClientSpi::OnAccept(int nListenSocketId, int nNewSocketId, const std::string& strRemoteIP, unsigned short uRemotePort)
 {
 	return;
@@ -78,6 +106,12 @@ void TCPClientSpi::OnRecieve(int nSocketId, const char* pData, unsigned int nLen
 {
 	std::cout << "RECV msg:" << pData << ", data len:"<< nLen << std::endl;
 	Send(nSocketId);
+}
+
+void TCPClientSpi::OnRecieveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short nRemotePort)
+{
+	std::cout << "RECV From:" << strRemoteIp.c_str() << ":" << nRemotePort << ", msg:" << pData << ", data len:" << nLen << std::endl;
+	SendTo(nSocketId, strRemoteIp, nRemotePort);
 }
 
 void TCPClientSpi::OnSend(int nSocketId, const char* pData, unsigned int nLen)

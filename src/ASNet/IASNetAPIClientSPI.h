@@ -16,17 +16,22 @@ public:
 	/************************************************************************/
 	/* 连接成功回调                                                         */
 	/************************************************************************/
-	virtual void OnAccept(int nListenSocketId, int nNewSocketId, const std::string& strRemoteIP, unsigned short uRemotePort) { return; };
+	virtual void OnAccept(int nListenSocketId, int nNewSocketId, const std::string& strRemoteIP, unsigned short uRemotePort) {};
 
 	/************************************************************************/
 	/* 连接成功回调                                                         */
 	/************************************************************************/
-	virtual void OnConnect(int nSocketId, const std::string& strRemoteIP, unsigned short uRemotePort) { return; };
+	virtual void OnConnect(int nSocketId, const std::string& strRemoteIP, unsigned short uRemotePort) {};
 
 	/************************************************************************/
 	/* 接收网络数据回调,应用层需要处理接收到的数据包                        */
 	/************************************************************************/
-	virtual void OnRecieve(int nSocketId, const char* pData, unsigned int nLen) = 0;
+	virtual void OnRecieve(int nSocketId, const char* pData, unsigned int nLen) {};
+
+	/************************************************************************/
+	/* 接收网络数据回调,应用层需要处理接收到的数据包                        */
+	/************************************************************************/
+	virtual void OnRecieveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIP, unsigned short uRemotePort) {};
 
 	/************************************************************************/
 	/* 发送数据成功回调                                                     */

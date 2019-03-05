@@ -128,13 +128,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="client\TCPClientSpi.cpp" />
     <ClCompile Include="client\main.cpp" />
-    <ClCompile Include="client\TCPServerSpi.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="client\TCPClientSpi.h" />
-    <ClInclude Include="client\TCPServerSpi.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

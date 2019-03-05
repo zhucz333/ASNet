@@ -13,6 +13,8 @@
 #include "MThread.h"
 #include "Strand.h"
 
+#define MAX_RECV_BUFFER_SIZE 16*1024
+
 enum ConnectionState
 {
 	CONNECTION_UNCONNECTED = 0,
@@ -41,12 +43,13 @@ public:
 	ASNetAPIClientType GetClientType();
 	int GetSocketId();
 	int Send(const char* pData, unsigned int nLen, std::string &errMsg);
+	int SendTo(const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short uRemotePort, std::string &errMsg);
 	bool Close();
 
 	std::shared_ptr<Connection> OnAccept(int nAcceptSocketId, const char* in);
 	void OnConnect();
 	void OnSend(char *data = NULL, int len = 0);
-	void OnRecv(const std::string& in);
+	void OnRecv(const std::string & in, const std::string & strRemoteIp, unsigned short nRemotePort);
 	void OnClose();
 	void OnError(const std::string &errMsg);
 
@@ -56,6 +59,7 @@ public:
 #ifdef _WIN32
 	bool PostConnect(std::string& errMsg);
 	bool PostRecv(std::string& errMsg);
+	bool PostRecvFrom(std::string& errMsg);
 	bool PostAcceptEx(int nAcceptSocketId, std::string& errMsg);
 #endif
 
@@ -78,12 +82,12 @@ private:
 	std::string m_strPacket;
 
 	std::mutex m_mutexSendData;
-	std::list<std::string> m_listSendData;
+	std::list<std::tuple<std::string, std::string, unsigned short>> m_listSendData;
 
 	std::shared_ptr<MThread> m_ptrThread;
 	Strand m_strand;
 	std::mutex m_mutexRecvData;
-	std::list<std::string> m_listRecvData;
+	std::list<std::tuple<std::string, std::string, unsigned short>> m_listRecvData;
 
 #ifdef _WIN32
 	LPFN_CONNECTEX m_lpfnConnectEx;

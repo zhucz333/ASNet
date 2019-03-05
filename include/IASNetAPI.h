@@ -84,6 +84,19 @@ public:
 	virtual bool Send(int nSocketId, const char* pData, unsigned int nLen, std::string &errMsg) = 0;
 
 	/************************************************************************/
+	/* 异步发送操作														    */
+	/* 发送数据成功，会异步回调应用层中的OnSend函数							*/
+	/* 发送数据失败，会异步回调应用层中的OnError函数						*/
+	/* nSocketId为CreateClient返回的连接标识符                              */
+	/* pData为发送数据首地址				                                */
+	/* nLen为发送数据长度													*/
+	/* strRemoteIp为目的地址				                                */
+	/* uRemotePort为目的端口号												*/
+	/* true表示调用成功，false表示失败，errMsg失败原因						*/
+	/************************************************************************/
+	virtual bool SendTo(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short uRemotePort, std::string &errMsg) = 0;
+
+	/************************************************************************/
 	/* 异步关闭连接操作												        */
 	/* 关闭连接成功，会异步调用应用层中的OnClose函数						*/
 	/* nSocketId为CreateClient返回的连接标识符                              */

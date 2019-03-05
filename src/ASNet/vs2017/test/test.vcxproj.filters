@@ -18,19 +18,5 @@
     <ClCompile Include="client\main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="client\TCPClientSpi.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="client\TCPServerSpi.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="client\TCPClientSpi.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="client\TCPServerSpi.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

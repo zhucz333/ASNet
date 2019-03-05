@@ -18,19 +18,19 @@
     <ClInclude Include="..\..\..\Connection.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\IASNetAPI.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\IASNetAPIPacketHelper.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\IASNetAPIClientSPI.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\ASNetAPIIOCP.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\ASNetAPIIOCPContext.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\IASNetAPI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\IASNetAPIClientSPI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\IASNetAPIPacketHelper.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

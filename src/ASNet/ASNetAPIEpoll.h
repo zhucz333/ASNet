@@ -26,6 +26,7 @@ public:
 	virtual bool Listen(int nSocketId, int backlog, std::string& errMsg);
 	virtual bool Connect(int nSocketId, const std::string& strServerIp, unsigned short uServerPort, std::string& errMsg);
 	virtual bool Send(int nSocketId, const char* pData, unsigned int nLen, std::string& errMsg);
+	virtual bool SendTo(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short uRemotePort, std::string &errMsg);
 	virtual bool Close(int nSocketId);
 
 private:
@@ -33,13 +34,11 @@ private:
 	void DoIOPoll();
 
 	void OnConnect(int nSocketId);
-	void OnRecv(int nSocketID, const std::string &inData);
+	void OnRecv(int nSocketID, const std::string & inData, const std::string & strRemoteIp, unsigned short nRemotePort);
 	void OnSend(int nSocketID);
 	void OnError(int nSocketID, const std::string &errMsg);
 	void OnClose(int nSocketID);
-	
-
-	int ReadAll(int nSocketID, std::string &buff);
+	int ReadAll(int nSocketID, std::string& out, std::string& strRemoteIp, unsigned short& nRemotePort);
 
 private:
 	int m_nWorkThreadNum;

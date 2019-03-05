@@ -80,9 +80,10 @@ void ASNetAPIEpoll::DoIOPoll()
 			} else if (events & FD_EVENT_OUT) {
 				OnSend(fd);
 			} else if (events & FD_EVENT_IN) {
-				std::string out;
-				if (ReadAll(fd, out) > 0) {
-					OnRecv(fd, out);
+				std::string out = "", ip = "";
+				unsigned short port = 0;
+				if (ReadAll(fd, out, ip, port) > 0) {
+					OnRecv(fd, out, ip, port);
 				} else {
 					OnClose(fd);
 				}
@@ -111,6 +112,11 @@ int ASNetAPIEpoll::CreateClient(IASNetAPIClientSPI* spi, IASNetAPIPacketHelper* 
 		return -1;
 	}
 	
+	int nOptval = 1;
+	if (setsockopt(socketID, SOL_SOCKET, SO_REUSEADDR, (const char *)&nOptval, sizeof(nOptval)) < 0) {
+		return INVALID_SOCKET;
+	}
+
 	struct sockaddr_in localAddr;
 	memset(&localAddr, 0, sizeof(localAddr));
 	localAddr.sin_family = AF_INET;
@@ -223,6 +229,34 @@ bool ASNetAPIEpoll::Send(int nSocketId, const char* pData, unsigned int nLen, st
 
 	return true;
 }
+
+
+
+bool ASNetAPIEpoll::SendTo(int nSocketId, const char * pData, unsigned int nLen, const std::string & strRemoteIp, unsigned short uRemotePort, std::string & errMsg)
+{
+	if (nSocketId < 0 || pData == NULL) return false;
+
+	std::shared_ptr<Connection> ptrConn = nullptr;
+
+	{
+		std::shared_lock<std::shared_mutex> sl(m_mapMutex);
+		ptrConn = m_mapClient[nSocketId];
+	}
+
+	if (ptrConn == nullptr) {
+		errMsg.append("socketID is not valid, please Call CreateClient() first! socketId = " + std::to_string(nSocketId));
+		return false;
+	}
+
+	int ret = ptrConn->SendTo(pData, nLen, strRemoteIp, uRemotePort, errMsg);
+
+	if (ret) {
+		ptrConn->OnError(errMsg);
+		return false;
+	}
+
+	return true;
+}
 	
 void ASNetAPIEpoll::OnConnect(int nSocketID)
 {
@@ -262,7 +296,7 @@ void ASNetAPIEpoll::OnSend(int nSocketID)
 	m_ptrIoService->Post(std::bind(&Connection::OnSend, ptrConn.get(), nullptr, 0));
 }
 
-void ASNetAPIEpoll::OnRecv(int nSocketID, const std::string& inData)
+void ASNetAPIEpoll::OnRecv(int nSocketID, const std::string& inData, const std::string& strRemoteIp, unsigned short nRemotePort)
 {
 	std::shared_ptr<Connection> ptrConn = nullptr;
 	{
@@ -275,7 +309,7 @@ void ASNetAPIEpoll::OnRecv(int nSocketID, const std::string& inData)
 	}
 
 	// Call OnRecv Orderly
-	ptrConn->OnRecv(inData);
+	ptrConn->OnRecv(inData, strRemoteIp, nRemotePort);
 }
 
 void ASNetAPIEpoll::OnClose(int nSocketID)
@@ -324,38 +358,40 @@ void ASNetAPIEpoll::OnError(int nSocketID, const std::string& errMsg)
 	m_ptrFDEvent->EventDel(nSocketID);
 }
 
-int ASNetAPIEpoll::ReadAll(int nSocketID, std::string &out)
+int ASNetAPIEpoll::ReadAll(int nSocketID, std::string& out, std::string& strRemoteIp, unsigned short& nRemotePort)
 {
-	char buff[1024] = {};
-	int nleft = 0, nread = 0, nlen = 0;
+	char buff[MAX_RECV_BUFFER_SIZE] = {};
+	int nleft = 0, nread = 0;
+	struct sockaddr_in remoteAddr = {0};
+
+	memset(buff, 0, sizeof(buff));
+	nleft = sizeof(buff);
+	nread = 0;
 	
+	// TODO:为了适配UDP的读取，此处的recv效率偏低，只读一次
 	do {
-		memset(buff, 0, sizeof(buff));
-		nleft = sizeof(buff);
-		nread = 0;
-		nlen = 0;
-	
-		while (nleft > 0) {
-			nread = read(nSocketID, buff + nlen, nleft);
-			if (nread < 0) {
-				if (errno == EINTR) {
-					continue;
-				} else if (errno == EAGAIN || errno == EWOULDBLOCK) {
-					break;
-				} else {
-					return -1;
-				}
-			} else if (0 == nread) {
+		nread = recvfrom(nSocketID, buff, nleft, 0, &remoteAddr, sizeof(remoteAddr));
+		if (nread < 0) {
+			if (errno == EINTR) {
+				continue;
+			}
+			else if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				break;
 			}
-			nlen += nread;
-			nleft -= nread;
+			else {
+				return -1;
+			}
 		}
-		
-		if (nlen > 0) {
-			out.append(buff, nlen);
+		else if (0 == nread) {
+			break;
 		}
-	} while (nleft == 0);
+
+		out.append(buff, nread);
+		strRemoteIp(inet_ntoa(remoteAddr.sin_addr));
+		nRemotePort = ntohs(remoteAddr.sin_port);
+
+		break;
+	} while (1);
 
 	return out.size();
 }

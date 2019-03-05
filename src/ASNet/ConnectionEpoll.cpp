@@ -39,6 +39,11 @@ bool Connection::Listen(int backlog, std::string& errMsg)
 		return false;
 	}
 
+	if (m_clientType == ASNETAPI_UDP_CLIENT) {
+		errMsg.append("Cient is not TCP client, fd = " + std::to_string(m_nSocketId));
+		return false;
+	}
+
 	if (0 != listen(m_nSocketId, backlog)) {
 		errMsg.append("Call listen() error, ErrorCode = " + std::to_string(errno) + ", error info : " + strerror(errno));
 		return false;
@@ -51,11 +56,9 @@ bool Connection::Listen(int backlog, std::string& errMsg)
 
 ConnectionState Connection::Connect(const std::string& strServerIp, unsigned short uServerPort, std::string &errMsg)
 {
-	if (ASNETAPI_UDP_CLIENT == m_clientType && 0 == strServerIp.length()) {
-		m_strRemoteIP = strServerIp;
-		m_nRemotePort = uServerPort;
-
-		return CONNECTION_CONNECTED;
+	if (ASNETAPI_UDP_CLIENT == m_clientType) {
+		errMsg.append("Call Connect() ERROR, Cient is not TCP client, fd = " + std::to_string(m_nSocketId));
+		return CONNECTION_CONNECT_FAILED;
 	}
 
 	if (m_eConnetionState == CONNECTION_CONNECTED || m_eConnetionState == CONNECTION_CONNECTING) {
@@ -105,6 +108,11 @@ ASNetAPIClientType Connection::GetClientType()
 
 int Connection::Send(const char* pData, unsigned int nLen, std::string& errMsg)
 {
+	if (m_clientType != ASNETAPI_TCP_CLIENT) {
+		errMsg.append("Call Send() error, client is not TCP client, fd = " + std::to_string(m_nSocketId));
+		return -1;
+	}
+
 	if (m_eConnetionState != CONNECTION_CONNECTED) {
 		errMsg.append("Connection is not connected, please connect to remote first!");
 		return -1;
@@ -112,8 +120,23 @@ int Connection::Send(const char* pData, unsigned int nLen, std::string& errMsg)
 
 	{
 		std::unique_lock<std::mutex> lock(m_mutexSendData);
-		m_listSendData.push_back(std::string(pData, nLen));
+		m_listSendData.push_back(std::tuple<std::string, std::string, unsigned short>(std::string(pData, nLen), "", 0));
 	}
+	return nLen;
+}
+
+int Connection::SendTo(const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short uRemotePort, std::string &errMsg)
+{
+	if (m_clientType != ASNETAPI_UDP_CLIENT) {
+		errMsg.append("Call SendTo() error, client is not UDP client, fd = " + std::to_string(m_nSocketId));
+		return -1;
+	}
+
+	{
+		std::unique_lock<std::mutex> lock(m_mutexSendData);
+		m_listSendData.push_back(std::tuple<std::string, std::string, unsigned short>(std::string(pData, nLen), strRemoteIp, uRemotePort));
+	}
+
 	return nLen;
 }
 
@@ -170,18 +193,33 @@ void Connection::OnSend(char *data, int len)
 	std::unique_lock <std::mutex> lock(m_mutexSendData);
 	while (!m_listSendData.empty()) {
 		auto var = m_listSendData.begin();
-		int ret = write(m_nSocketId, var->c_str(), var->size());
+		auto data = std::get<0>(*var);
+		auto ip = std::get<1>(*var);
+		auto port = std::get<2>(*var);
 
-		if (var->size() == ret) {
-			m_ptrCSPI->OnSend(m_nSocketId, var->c_str(), var->size());
+		int ret = -1;
+		if (ASNETAPI_TCP_CLIENT == m_clientType) {
+			int ret = write(m_nSocketId, data.c_str(), data.size());
+		} else {
+			struct sockaddr_in remoteAddr;
+			memset(&remoteAddr, 0, sizeof(remoteAddr));
+			remoteAddr.sin_family = AF_INET;
+			remoteAddr.sin_port = htons(port);
+			remoteAddr.sin_addr.s_addr = inet_addr(ip.c_str());
+
+			ret = sendto(m_nSocketId, data.c_str(), data.size(), 0, &remoteAddr, sizeof(remoteAddr));
+		}
+
+		if (data.size() == ret) {
+			m_ptrCSPI->OnSend(m_nSocketId, data.c_str(), data.size());
 			m_listSendData.pop_front();
 			continue;
-		} else if (ret > 0 && ret < var->size()) {
-			std::string data = var->substr(ret);
+		} else if (ret > 0 && ret < data.size()) {
+			std::string sub = data.substr(ret);
 			m_listSendData.pop_front();
-			m_listSendData.push_front(data);
+			m_listSendData.push_front(std::tuple<std::string, std::string, unsigned short>(sub, std::get<1>(*var), std::get<2>(*var)));
 			continue;
-		} else if (ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+		} else if (ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
 			continue;
 		} else {
 			OnError("SEND error, errno: " + std::to_string(errno) + ", " + strerror(errno));
@@ -192,11 +230,11 @@ void Connection::OnSend(char *data, int len)
 	m_bSending = false;
 }
 
-void Connection::OnRecv(const std::string& in)
+void Connection::OnRecv(const std::string& in, const std::string& strRemoteIp, unsigned short nRemotePort)
 {
 	{
 		std::unique_lock <std::mutex> lock(m_mutexRecvData);
-		m_listRecvData.push_back(in);
+		m_listRecvData.push_back(std::tuple<std::string, std::string, unsigned short>(in, strRemoteIp, nRemotePort));
 	}
 
 	m_strand.Post(std::bind(&Connection::DoRecv, this));
@@ -235,85 +273,96 @@ void Connection::DoRecv()
 			break;
 		}
 
-		if (!m_ptrHelper) {
+		if (ASNETAPI_UDP_CLIENT == m_clientType || !m_ptrHelper) {
 			auto var = m_listRecvData.begin();
+			auto data = std::get<0>(*var);
+			auto ip = std::get<1>(*var);
+			auto port = std::get<2>(*var);
 
-			m_ptrCSPI->OnRecieve(m_nSocketId, var->c_str(), var->size());
+			if (ASNETAPI_UDP_CLIENT == m_clientType) {
+				m_ptrCSPI->OnRecieveFrom(m_nSocketId, data.c_str(), data.size(), ip, port);
+			} else {
+				m_ptrCSPI->OnRecieve(m_nSocketId, data.c_str(), data.size());
+			}
 			m_listRecvData.pop_front();
-		} else {
-			int need = 0;
-			m_nHeaderSize = m_ptrHelper->GetPacketHeaderSize();
-			if (m_nHeaderSize <= 0) {
-				OnError("GetPacketHeaderSize return error, header size = " + std::to_string(m_nHeaderSize));
-				break;
+			continue;
+		}
+
+		int need = 0;
+		m_nHeaderSize = m_ptrHelper->GetPacketHeaderSize();
+		if (m_nHeaderSize <= 0) {
+			OnError("GetPacketHeaderSize return error, header size = " + std::to_string(m_nHeaderSize));
+			break;
+		}
+
+		switch (m_eConnetionReadMachineState) {
+		case CONNECTION_READ_HEAD:
+			if (m_nHeaderSize > m_strPacket.size()) {
+				need = m_nHeaderSize - m_strPacket.size();
 			}
 
-			switch (m_eConnetionReadMachineState) {
-			case CONNECTION_READ_HEAD:
-				if (m_nHeaderSize > m_strPacket.size()) {
-					need = m_nHeaderSize - m_strPacket.size();
+			for (; !m_listRecvData.empty() && need > 0;) {
+				auto iter = m_listRecvData.begin();
+				auto data = std::get<0>(*iter);
+				if (data.size() > need) {
+					m_strPacket.append(data.substr(0, need));
+					std::string sub = data.substr(need);
+					m_listRecvData.pop_front();
+					m_listRecvData.push_front(std::tuple<std::string, std::string, unsigned short>(sub, "", 0));
+					need = 0;
+
+					break;
+				} else {
+					m_strPacket.append(data);
+					need -= data.size();
+					m_listRecvData.pop_front();
 				}
-
-				for (; !m_listRecvData.empty() && need > 0;) {
-					auto iter = m_listRecvData.begin();
-					if (iter->size() > need) {
-						m_strPacket.append(iter->substr(0, need));
-						std::string str = iter->substr(need);
-						m_listRecvData.pop_front();
-						m_listRecvData.push_front(str);
-						need = 0;
-
-						break;
-					} else {
-						m_strPacket.append(*iter);
-						need -= iter->size();
-						m_listRecvData.pop_front();
-					}
-				}
-
-				if (0 == need) {
-					m_nTotalSize = m_ptrHelper->GetPacketTotalSize(m_strPacket.c_str(), m_nHeaderSize);
-					if (m_nTotalSize < 0) {
-						OnError("GetPacketTotalSize return error, total size = " + std::to_string(m_nTotalSize));
-						Close();
-					}
-					m_eConnetionReadMachineState = CONNECTION_READ_BODY;
-				}
-
-				break;
-			case CONNECTION_READ_BODY:
-				if (m_nTotalSize > m_strPacket.size()) {
-					need = m_nTotalSize - m_strPacket.size();
-				}
-
-				for (; !m_listRecvData.empty() && need > 0; ) {
-					auto iter = m_listRecvData.begin();
-					if (iter->size() > need) {
-						m_strPacket.append(iter->substr(0, need));
-						std::string str = iter->substr(need);
-						m_listRecvData.pop_front();
-						m_listRecvData.push_front(str);
-						need = 0;
-
-						break;
-					} else {
-						m_strPacket.append(*iter);
-						need -= iter->size();
-						m_listRecvData.pop_front();
-					}
-				}
-
-				if (0 == need) {
-					m_ptrCSPI->OnRecieve(m_nSocketId, m_strPacket.c_str(), m_strPacket.size());
-
-					m_strPacket.clear();
-					m_nTotalSize = 0;
-					m_eConnetionReadMachineState = CONNECTION_READ_HEAD;
-				}
-				break;
-			default:
-				break;
 			}
+
+			if (0 == need) {
+				m_nTotalSize = m_ptrHelper->GetPacketTotalSize(m_strPacket.c_str(), m_nHeaderSize);
+				if (m_nTotalSize < 0) {
+					OnError("GetPacketTotalSize return error, total size = " + std::to_string(m_nTotalSize));
+					Close();
+				}
+				m_eConnetionReadMachineState = CONNECTION_READ_BODY;
+			}
+
+			break;
+		case CONNECTION_READ_BODY:
+			if (m_nTotalSize > m_strPacket.size()) {
+				need = m_nTotalSize - m_strPacket.size();
+			}
+
+			for (; !m_listRecvData.empty() && need > 0;) {
+				auto iter = m_listRecvData.begin();
+				auto data = std::get<0>(*iter);
+				if (data.size() > need) {
+					m_strPacket.append(data.substr(0, need));
+					std::string sub = data.substr(need);
+					m_listRecvData.pop_front();
+					m_listRecvData.push_front(std::tuple<std::string, std::string, unsigned short>(sub, "", 0));
+					need = 0;
+
+					break;
+				}
+				else {
+					m_strPacket.append(data);
+					need -= data.size();
+					m_listRecvData.pop_front();
+				}
+			}
+
+			if (0 == need) {
+				m_ptrCSPI->OnRecieve(m_nSocketId, m_strPacket.c_str(), m_strPacket.size());
+
+				m_strPacket.clear();
+				m_nTotalSize = 0;
+				m_eConnetionReadMachineState = CONNECTION_READ_HEAD;
+			}
+			break;
+		default:
+			break;
 		}
 	} while(1);
 

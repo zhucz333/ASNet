@@ -151,6 +151,11 @@ int ASNetAPIIOCP::CreateClient(IASNetAPIClientSPI* cspi, IASNetAPIPacketHelper* 
 		return INVALID_SOCKET;
 	}
 
+	int nOptval = 1;
+	if (setsockopt(socketID, SOL_SOCKET, SO_REUSEADDR, (const char *)&nOptval, sizeof(nOptval)) < 0) {
+		return INVALID_SOCKET;
+	}
+
 	if (NULL == CreateIoCompletionPort((HANDLE)socketID, m_hIOCompletionPort, (DWORD)socketID, 0)) {
 		return INVALID_SOCKET;
 	}
@@ -160,6 +165,14 @@ int ASNetAPIIOCP::CreateClient(IASNetAPIClientSPI* cspi, IASNetAPIPacketHelper* 
 	{
 		std::unique_lock<std::shared_mutex> ul(m_mapMutex);
 		m_mapClient[socketID] = ptrConn;
+	}
+
+	if (type == ASNETAPI_UDP_CLIENT) {
+		std::string errMsg;
+		if (false == ptrConn->PostRecvFrom(errMsg)) {
+			ptrConn->OnError(errMsg);
+			ptrConn->Close();
+		}
 	}
 
 	return socketID;
@@ -228,7 +241,6 @@ bool ASNetAPIIOCP::Connect(int nSocketId, const std::string& strServerIp, unsign
 	ConnectionState state = ptrConn->Connect(strServerIp, uServerPort, errMsg);
 
 	if (CONNECTION_CONNECT_FAILED == state) {
-		ptrConn->OnError(errMsg);
 		return false;
 	}
 
@@ -252,6 +264,32 @@ bool ASNetAPIIOCP::Send(int nSocketId, const char* pData, unsigned int nLen, std
 	}
 
 	int ret = ptrConn->Send(pData, nLen, errMsg);
+
+	if (ret) {
+		ptrConn->OnError(errMsg);
+		return false;
+	}
+
+	return true;
+}
+
+bool ASNetAPIIOCP::SendTo(int nSocketId, const char * pData, unsigned int nLen, const std::string & strRemoteIp, unsigned short uRemotePort, std::string & errMsg)
+{
+	if (nSocketId < 0 || pData == NULL) return false;
+
+	std::shared_ptr<Connection> ptrConn = nullptr;
+
+	{
+		std::shared_lock<std::shared_mutex> sl(m_mapMutex);
+		ptrConn = m_mapClient[nSocketId];
+	}
+
+	if (ptrConn == nullptr) {
+		errMsg.append("socketID is not valid, please Call CreateClient() first! socketId = " + std::to_string(nSocketId));
+		return false;
+	}
+
+	int ret = ptrConn->SendTo(pData, nLen, strRemoteIp, uRemotePort, errMsg);
 
 	if (ret) {
 		ptrConn->OnError(errMsg);
@@ -345,9 +383,16 @@ int ASNetAPIIOCP::WorkerThread(int nThreadID)
 			break;
 		case IOCP_RECV_POSTED:
 			in.append(ctx->m_wsaBuffer.buf, dwBytesTransfered);
-			ptrConn->OnRecv(in);
+			ptrConn->OnRecv(in, "", 0);
 
 			delete []ctx->m_wsaBuffer.buf;
+			break;
+		case IOCP_RECV_FROM_POSTED:
+			in.append(ctx->m_wsaBuffer.buf, dwBytesTransfered);
+
+			ptrConn->OnRecv(in, inet_ntoa(ctx->m_stRemoteAddr.sin_addr), ctx->m_stRemoteAddr.sin_port);
+
+			delete[]ctx->m_wsaBuffer.buf;
 			break;
 		case IOCP_SEND_POSTED:
 			ptrConn->OnSend(ctx->m_wsaBuffer.buf, ctx->m_wsaBuffer.len);

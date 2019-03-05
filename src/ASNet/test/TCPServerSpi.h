@@ -14,6 +14,7 @@ public:
 	int Run(std::string ip, int port);
 	int Listen();
 	int Send(int nSocketId, std::string msg);
+	int SendTo(int nSocketId, std::string msg, const std::string& strRemoteIp, unsigned short nRemotePort);
 	int Close();
 
 	virtual void OnAccept(int nListenSocketId, int nNewSocketId, const std::string& strRemoteIP, unsigned short uRemotePort);
@@ -21,6 +22,8 @@ public:
 	virtual void OnConnect(int nSocketId, const std::string& strRemoteIP, unsigned short uRemotePort);
 
 	virtual void OnRecieve(int nSocketId, const char* pData, unsigned int nLen);
+
+	virtual void OnRecieveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short nRemotePort);
 
 	virtual void OnSend(int nSocketId, const char* pData, unsigned int nLen);
 
