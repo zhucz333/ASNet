@@ -390,7 +390,7 @@ int ASNetAPIIOCP::WorkerThread(int nThreadID)
 		case IOCP_RECV_FROM_POSTED:
 			in.append(ctx->m_wsaBuffer.buf, dwBytesTransfered);
 
-			ptrConn->OnRecv(in, inet_ntoa(ctx->m_stRemoteAddr.sin_addr), ctx->m_stRemoteAddr.sin_port);
+			ptrConn->OnRecv(in, inet_ntoa(ctx->m_stRemoteAddr.sin_addr), ntohs(ctx->m_stRemoteAddr.sin_port));
 
 			delete[]ctx->m_wsaBuffer.buf;
 			break;

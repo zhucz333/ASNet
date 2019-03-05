@@ -30,17 +30,17 @@ int TCPClientSpi::Run(std::string ip, int port)
 int TCPClientSpi::Connect()
 {
 	std::string errMsg;
-	m_nSocketID = m_ptrNetAPI->CreateClient(this, nullptr, "127.0.0.1", 7777, ASNETAPI_UDP_CLIENT);
+	m_nSocketID = m_ptrNetAPI->CreateClient(this);
 	std::cout << "fd:" << m_nSocketID << std::endl; 
 
-	SendTo(m_nSocketID, m_strRemoteIP, m_nRemotePort);
-	/*
+	//SendTo(m_nSocketID, m_strRemoteIP, m_nRemotePort);
+
 	if (false == m_ptrNetAPI->Connect(m_nSocketID, m_strRemoteIP.c_str(), m_nRemotePort, errMsg)) {
 		std::cout << "Call connect to " << m_strRemoteIP.c_str() << ":" << m_nRemotePort << " ERROR! error:" << errMsg.c_str() << std::endl;
 		return -1;
 	}
 	std::cout << "Call connect to " << m_strRemoteIP.c_str() << ":" << m_nRemotePort << " OK, wait connect result!" << std::endl;
-	*/
+
 
 	return 0;
 }
