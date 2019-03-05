@@ -199,7 +199,7 @@ void Connection::OnSend(char *data, int len)
 
 		int ret = -1;
 		if (ASNETAPI_TCP_CLIENT == m_clientType) {
-			int ret = write(m_nSocketId, data.c_str(), data.size());
+			ret = write(m_nSocketId, data.c_str(), data.size());
 		} else {
 			struct sockaddr_in remoteAddr;
 			memset(&remoteAddr, 0, sizeof(remoteAddr));

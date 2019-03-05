@@ -363,7 +363,7 @@ int ASNetAPIEpoll::ReadAll(int nSocketID, std::string& out, std::string& strRemo
 	char buff[MAX_RECV_BUFFER_SIZE] = {};
 	int nleft = 0, nread = 0;
 	struct sockaddr_in remoteAddr = {0};
-	int addrLen = sizeof(remoteAddr);
+	socklen_t addrLen = sizeof(remoteAddr);
 
 	memset(buff, 0, sizeof(buff));
 	nleft = sizeof(buff);
