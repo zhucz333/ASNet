@@ -128,16 +128,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\ASNetAPIEpoll.h" />
     <ClInclude Include="..\..\..\Connection.h" />
     <ClInclude Include="..\..\..\ASNetAPIIOCP.h" />
     <ClInclude Include="..\..\..\ASNetAPIIOCPContext.h" />
+    <ClInclude Include="..\..\..\EventEpoll.h" />
     <ClInclude Include="..\..\..\IASNetAPI.h" />
     <ClInclude Include="..\..\..\IASNetAPIClientSPI.h" />
     <ClInclude Include="..\..\..\IASNetAPIPacketHelper.h" />
+    <ClInclude Include="..\..\..\IEvent.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\ASNetAPIEpoll.cpp" />
+    <ClCompile Include="..\..\..\ConnectionEpoll.cpp" />
     <ClCompile Include="..\..\..\ConnectionIOCP.cpp" />
     <ClCompile Include="..\..\..\ASNetAPIIOCP.cpp" />
+    <ClCompile Include="..\..\..\EventEpoll.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

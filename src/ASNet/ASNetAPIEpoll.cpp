@@ -114,7 +114,7 @@ int ASNetAPIEpoll::CreateClient(IASNetAPIClientSPI* spi, IASNetAPIPacketHelper* 
 	
 	int nOptval = 1;
 	if (setsockopt(socketID, SOL_SOCKET, SO_REUSEADDR, (const char *)&nOptval, sizeof(nOptval)) < 0) {
-		return INVALID_SOCKET;
+		return -1;
 	}
 
 	struct sockaddr_in localAddr;
@@ -370,7 +370,7 @@ int ASNetAPIEpoll::ReadAll(int nSocketID, std::string& out, std::string& strRemo
 	
 	// TODO:为了适配UDP的读取，此处的recv效率偏低，只读一次
 	do {
-		nread = recvfrom(nSocketID, buff, nleft, 0, &remoteAddr, sizeof(remoteAddr));
+		nread = recvfrom(nSocketID, buff, nleft, 0, (sockaddr*)&remoteAddr, sizeof(remoteAddr));
 		if (nread < 0) {
 			if (errno == EINTR) {
 				continue;
@@ -387,7 +387,7 @@ int ASNetAPIEpoll::ReadAll(int nSocketID, std::string& out, std::string& strRemo
 		}
 
 		out.append(buff, nread);
-		strRemoteIp(inet_ntoa(remoteAddr.sin_addr));
+		strRemoteIp = inet_ntoa(remoteAddr.sin_addr);
 		nRemotePort = ntohs(remoteAddr.sin_port);
 
 		break;
