@@ -250,7 +250,7 @@ bool ASNetAPIEpoll::SendTo(int nSocketId, const char * pData, unsigned int nLen,
 
 	int ret = ptrConn->SendTo(pData, nLen, strRemoteIp, uRemotePort, errMsg);
 
-	if (ret) {
+	if (ret < 0) {
 		ptrConn->OnError(errMsg);
 		return false;
 	}
