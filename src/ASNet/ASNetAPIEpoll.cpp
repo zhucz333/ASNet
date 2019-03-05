@@ -363,6 +363,7 @@ int ASNetAPIEpoll::ReadAll(int nSocketID, std::string& out, std::string& strRemo
 	char buff[MAX_RECV_BUFFER_SIZE] = {};
 	int nleft = 0, nread = 0;
 	struct sockaddr_in remoteAddr = {0};
+	int addrLen = sizeof(remoteAddr);
 
 	memset(buff, 0, sizeof(buff));
 	nleft = sizeof(buff);
@@ -370,7 +371,7 @@ int ASNetAPIEpoll::ReadAll(int nSocketID, std::string& out, std::string& strRemo
 	
 	// TODO:为了适配UDP的读取，此处的recv效率偏低，只读一次
 	do {
-		nread = recvfrom(nSocketID, buff, nleft, 0, (sockaddr*)&remoteAddr, sizeof(remoteAddr));
+		nread = recvfrom(nSocketID, buff, nleft, 0, (sockaddr*)&remoteAddr, &addrLen);
 		if (nread < 0) {
 			if (errno == EINTR) {
 				continue;

@@ -207,7 +207,7 @@ void Connection::OnSend(char *data, int len)
 			remoteAddr.sin_port = htons(port);
 			remoteAddr.sin_addr.s_addr = inet_addr(ip.c_str());
 
-			ret = sendto(m_nSocketId, data.c_str(), data.size(), 0, &remoteAddr, sizeof(remoteAddr));
+			ret = sendto(m_nSocketId, data.c_str(), data.size(), 0, (sockaddr*)&remoteAddr, sizeof(remoteAddr));
 		}
 
 		if (data.size() == ret) {
