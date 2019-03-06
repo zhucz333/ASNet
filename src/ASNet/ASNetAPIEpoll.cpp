@@ -146,6 +146,10 @@ int ASNetAPIEpoll::CreateClient(IASNetAPIClientSPI* spi, IASNetAPIPacketHelper* 
 		m_mapClient[socketID] = ptrConn;
 	}
 
+	if (type == ASNETAPI_UDP_CLIENT) {
+		m_ptrFDEvent->EventAdd(socketID, FD_EVENT_IN);
+	}
+
 	return socketID;
 }
 
@@ -225,7 +229,9 @@ bool ASNetAPIEpoll::Send(int nSocketId, const char* pData, unsigned int nLen, st
 		return false;
 	}
 
-	m_ptrFDEvent->EventMod(nSocketId, FD_EVENT_OUT | FD_EVENT_IN);
+	m_ptrIoService->Post(std::bind(&Connection::OnSend, ptrConn.get(), nullptr, 0));
+	
+	m_ptrFDEvent->EventMod(nSocketId, FD_EVENT_IN);
 
 	return true;
 }
@@ -254,6 +260,10 @@ bool ASNetAPIEpoll::SendTo(int nSocketId, const char * pData, unsigned int nLen,
 		ptrConn->OnError(errMsg);
 		return false;
 	}
+
+	m_ptrIoService->Post(std::bind(&Connection::OnSend, ptrConn.get(), nullptr, 0));
+	
+	m_ptrFDEvent->EventMod(nSocketId, FD_EVENT_IN);
 
 	return true;
 }
@@ -369,7 +379,7 @@ int ASNetAPIEpoll::ReadAll(int nSocketID, std::string& out, std::string& strRemo
 	nleft = sizeof(buff);
 	nread = 0;
 	
-	// TODO:为了适配UDP的读取，此处的recv效率偏低，只读一次
+	// TODO:为锟斤拷锟斤拷锟斤拷UDP锟侥讹拷取锟斤拷锟剿达拷锟斤拷recv效锟斤拷偏锟酵ｏ拷只锟斤拷一锟斤拷
 	do {
 		nread = recvfrom(nSocketID, buff, nleft, 0, (sockaddr*)&remoteAddr, &addrLen);
 		if (nread < 0) {

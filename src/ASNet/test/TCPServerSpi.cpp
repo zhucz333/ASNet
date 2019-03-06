@@ -30,15 +30,15 @@ int TCPSeverSpi::Run(std::string ip, int port)
 int TCPSeverSpi::Listen()
 {
 	std::string errMsg;
-	m_nSocketID = m_ptrNetAPI->CreateClient(this, nullptr, m_strLocalIP, m_nLocalPort, ASNETAPI_UDP_CLIENT);
+	m_nSocketID = m_ptrNetAPI->CreateClient(this, nullptr, m_strLocalIP, m_nLocalPort, ASNETAPI_TCP_CLIENT);
 	std::cout << "fd:" << m_nSocketID << std::endl; 
-	/*
+	
 	if (false == m_ptrNetAPI->Listen(m_nSocketID, 1024, errMsg)) {
 		std::cout << "Start listen " << m_strLocalIP.c_str() << ":" << m_nLocalPort << " ERROR! error:" << errMsg.c_str() << std::endl;
 		return -1;
 	}
 	std::cout << "Start listen " << m_strLocalIP.c_str() << ":" << m_nLocalPort << " OK, wait connect result!" << std::endl;
-	*/
+
 	return 0;
 }
 int TCPSeverSpi::Send(int m_nSocketID, std::string msg)
