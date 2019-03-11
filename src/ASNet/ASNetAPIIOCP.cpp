@@ -28,6 +28,7 @@ ASNetAPIIOCP::ASNetAPIIOCP()
 	WSAStartup(MAKEWORD(2, 2), &wsaData);
 
 	m_bStart = false;
+	m_hIOCompletionPort = NULL;
 }
 
 ASNetAPIIOCP::~ASNetAPIIOCP()
@@ -153,10 +154,13 @@ int ASNetAPIIOCP::CreateClient(IASNetAPIClientSPI* cspi, IASNetAPIPacketHelper* 
 
 	int nOptval = 1;
 	if (setsockopt(socketID, SOL_SOCKET, SO_REUSEADDR, (const char *)&nOptval, sizeof(nOptval)) < 0) {
+
+		
 		return INVALID_SOCKET;
 	}
 
 	if (NULL == CreateIoCompletionPort((HANDLE)socketID, m_hIOCompletionPort, (DWORD)socketID, 0)) {
+		printf("%d", GetLastError());
 		return INVALID_SOCKET;
 	}
 
