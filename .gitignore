@@ -45,3 +45,4 @@
 /src/ASNet/vs2017/test/Win32/Debug
 /src/ASNet/vs2017/test/x64/Debug
 /src/ASNet/vs2017/test/Win32/Release/test.log
+/src/build_vs2017_64
