@@ -138,7 +138,7 @@ public:
 };
 ```
 <br>2.3 ASNet库TCP粘包接口</br>
-<br>所有需要TCP粘包的client节点必须实现该接口类, 目前TCP粘包的接口比较单一，后续要持续增加</br>
+<br>所有需要TCP粘包的client节点必须实现该接口类, 目前TCP粘包的功能比较单一，只支持开始是包头，并且包头含有（或可推断出）整个报文长度的协议。粘包的功能，后续会持续增加，敬请关注。</br>
 ```cpp
 class IASNetAPIPacketHelper
 {
