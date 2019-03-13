@@ -9,7 +9,7 @@
 
 #include <shared_mutex>
 
-Connection::Connection(IASNetAPIClientSPI* cspi, IASNetAPIPacketHelper* helper, const std::shared_ptr<MThread> &service, int socketID, const std::string localIP, unsigned short localPort, ASNetAPIClientType type, ConnectionState state) : m_ptrCSPI(cspi), m_strand(*service), m_ptrThread(service), m_eConnetionState(state)
+Connection::Connection(IASNetAPIClientSPI* cspi, IASNetAPIPacketHelper* helper, const std::shared_ptr<MThread> &service, int socketID, const std::string localIP, unsigned short localPort, ASNetAPIClientType type, ConnectionState state) : m_eConnetionState(state), m_ptrCSPI(cspi), m_ptrThread(service), m_strand(*service) 
 {
 	m_nSocketId = socketID;
 	m_strLocalIP = localIP;
