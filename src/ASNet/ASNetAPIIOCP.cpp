@@ -154,13 +154,10 @@ int ASNetAPIIOCP::CreateClient(IASNetAPIClientSPI* cspi, IASNetAPIPacketHelper* 
 
 	int nOptval = 1;
 	if (setsockopt(socketID, SOL_SOCKET, SO_REUSEADDR, (const char *)&nOptval, sizeof(nOptval)) < 0) {
-
-		
 		return INVALID_SOCKET;
 	}
 
 	if (NULL == CreateIoCompletionPort((HANDLE)socketID, m_hIOCompletionPort, (DWORD)socketID, 0)) {
-		printf("%d", GetLastError());
 		return INVALID_SOCKET;
 	}
 
@@ -221,7 +218,7 @@ bool ASNetAPIIOCP::Listen(int nSocketId, int backlog, std::string& errMsg)
 	}
 
 	if (false == ptrConn->Listen(backlog, errMsg)) {
-		ptrConn->OnError(errMsg);
+		//ptrConn->OnError(errMsg);
 		return false;
 	}
 
@@ -270,7 +267,7 @@ bool ASNetAPIIOCP::Send(int nSocketId, const char* pData, unsigned int nLen, std
 	int ret = ptrConn->Send(pData, nLen, errMsg);
 
 	if (ret) {
-		ptrConn->OnError(errMsg);
+		//ptrConn->OnError(errMsg);
 		return false;
 	}
 
@@ -296,7 +293,7 @@ bool ASNetAPIIOCP::SendTo(int nSocketId, const char * pData, unsigned int nLen, 
 	int ret = ptrConn->SendTo(pData, nLen, strRemoteIp, uRemotePort, errMsg);
 
 	if (ret) {
-		ptrConn->OnError(errMsg);
+		//ptrConn->OnError(errMsg);
 		return false;
 	}
 
@@ -341,7 +338,7 @@ int ASNetAPIIOCP::WorkerThread(int nThreadID)
 			ptrConn = m_mapClient[ctx->m_nSocketId];
 		}
 		if (ptrConn == nullptr) {
-			ptrConn->OnError("IOCP recv msg, But Connection does not exist£º" + std::to_string((int)*socket));
+			ptrConn->OnError("IOCP recv msg, But Connection does not exist£º" + std::to_string(ctx->m_nSocketId));
 			continue;
 		}
 
@@ -350,7 +347,11 @@ int ASNetAPIIOCP::WorkerThread(int nThreadID)
 
 			if (ERROR_NETNAME_DELETED == error) {
 				ptrConn->OnClose();
-			} else {
+			}
+			else if (ERROR_OPERATION_ABORTED == error) {
+				; //Do nothing
+			}
+			else {
 				ptrConn->OnError("GetQueuedCompletionStatus Error, Error Code:" + std::to_string(error));
 			}
 

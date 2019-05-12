@@ -5,7 +5,6 @@
 #include <memory>
 #ifdef _WIN32
 #include <Mswsock.h>
-#include <Mstcpip.h>
 #endif
 #include "IASNetAPI.h"
 #include "IASNetAPIClientSPI.h"
@@ -72,7 +71,7 @@ private:
 	int m_nRemotePort;
 	std::string m_strRemoteIP;
 	ASNetAPIClientType m_clientType;
-	enum ConnectionState m_eConnetionState;
+	ConnectionState m_eConnetionState;
 	IASNetAPIClientSPI* m_ptrCSPI;
 
 	IASNetAPIPacketHelper* m_ptrHelper;

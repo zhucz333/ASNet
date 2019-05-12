@@ -21,9 +21,9 @@ public:
 
 	virtual void OnConnect(int nSocketId, const std::string& strRemoteIP, unsigned short uRemotePort);
 
-	virtual void OnRecieve(int nSocketId, const char* pData, unsigned int nLen);
+	virtual void OnReceive(int nSocketId, const char* pData, unsigned int nLen);
 
-	virtual void OnRecieveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short nRemotePort);
+	virtual void OnReceiveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short nRemotePort);
 
 	virtual void OnSend(int nSocketId, const char* pData, unsigned int nLen);
 
@@ -35,6 +35,7 @@ public:
 
 	virtual int GetPacketTotalSize(const char* header, int length);
 
+	virtual bool PacketCheck(const char* packet, int length);
 private:
 	int m_nSocketID;
 	int m_nRemotePort;

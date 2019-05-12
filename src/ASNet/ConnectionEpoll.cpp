@@ -291,8 +291,10 @@ void Connection::DoRecv()
 		int need = 0;
 		m_nHeaderSize = m_ptrHelper->GetPacketHeaderSize();
 		if (m_nHeaderSize <= 0) {
-			OnError("GetPacketHeaderSize return error, header size = " + std::to_string(m_nHeaderSize));
-			break;
+			OnError("GetPacketHeaderSize return error, header size = " + std::to_string(m_nHeaderSize) + ", Close the connection " + m_strRemoteIP + ":" + std::to_string(m_nRemotePort));
+			Close();
+
+			return;
 		}
 
 		switch (m_eConnetionReadMachineState) {
@@ -322,8 +324,10 @@ void Connection::DoRecv()
 			if (0 == need) {
 				m_nTotalSize = m_ptrHelper->GetPacketTotalSize(m_strPacket.c_str(), m_nHeaderSize);
 				if (m_nTotalSize < 0) {
-					OnError("GetPacketTotalSize return error, total size = " + std::to_string(m_nTotalSize));
+					OnError("GetPacketTotalSize error, total size = " + std::to_string(m_nTotalSize) + ", Close the connection " + m_strRemoteIP + ":" + std::to_string(m_nRemotePort));
 					Close();
+					
+					return;
 				}
 				m_eConnetionReadMachineState = CONNECTION_READ_BODY;
 			}
@@ -354,6 +358,12 @@ void Connection::DoRecv()
 			}
 
 			if (0 == need) {
+				if (!m_ptrHelper->PacketCheck(m_strPacket.c_str(), m_strPacket.size())) {
+					OnError("PacketCheck return false, close the connection " + m_strRemoteIP + ":" + std::to_string(m_nRemotePort));
+					Close();
+
+					return;
+				}
 				m_ptrCSPI->OnRecieve(m_nSocketId, m_strPacket.c_str(), m_strPacket.size());
 
 				m_strPacket.clear();

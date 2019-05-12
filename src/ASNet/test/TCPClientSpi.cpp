@@ -101,13 +101,13 @@ void TCPClientSpi::OnConnect(int nSocketId, const std::string& strRemoteIP, unsi
 	Send(nSocketId);
 }
 
-void TCPClientSpi::OnRecieve(int nSocketId, const char* pData, unsigned int nLen)
+void TCPClientSpi::OnReceive(int nSocketId, const char* pData, unsigned int nLen)
 {
 	std::cout << "RECV msg:" << pData << ", data len:"<< nLen << std::endl;
 	Send(nSocketId);
 }
 
-void TCPClientSpi::OnRecieveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short nRemotePort)
+void TCPClientSpi::OnReceiveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short nRemotePort)
 {
 	std::cout << "RECV From:" << strRemoteIp.c_str() << ":" << nRemotePort << ", msg:" << pData << ", data len:" << nLen << std::endl;
 	SendTo(nSocketId, strRemoteIp, nRemotePort);
@@ -143,5 +143,10 @@ int TCPClientSpi::GetPacketHeaderSize()
 int TCPClientSpi::GetPacketTotalSize(const char* header, int length)
 {
 	return 0;
+}
+
+bool TCPClientSpi::PacketCheck(const char* packet, int length)
+{
+	return true;
 }
 

@@ -26,12 +26,12 @@ public:
 	/************************************************************************/
 	/* 接收网络数据回调,应用层需要处理接收到的数据包                        */
 	/************************************************************************/
-	virtual void OnRecieve(int nSocketId, const char* pData, unsigned int nLen) {};
+	virtual void OnReceive(int nSocketId, const char* pData, unsigned int nLen) {};
 
 	/************************************************************************/
 	/* 接收网络数据回调,应用层需要处理接收到的数据包                        */
 	/************************************************************************/
-	virtual void OnRecieveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIP, unsigned short uRemotePort) {};
+	virtual void OnReceiveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIP, unsigned short uRemotePort) {};
 
 	/************************************************************************/
 	/* 发送数据成功回调                                                     */

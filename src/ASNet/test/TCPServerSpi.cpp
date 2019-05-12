@@ -65,6 +65,13 @@ int TCPSeverSpi::SendTo(int m_nSocketID, std::string msg, const std::string& str
 	return 0;
 }
 
+int TCPSeverSpi::Close()
+{
+	m_ptrNetAPI->Close(m_nSocketID);
+
+	return 0;
+}
+
 void TCPSeverSpi::OnAccept(int nListenSocketId, int nNewSocketId, const std::string& strRemoteIP, unsigned short uRemotePort)
 {
 	std::cout << "accept connection " << strRemoteIP.c_str() << ":" << uRemotePort << ":" << nNewSocketId <<" OK" << std::endl;
@@ -74,14 +81,14 @@ void TCPSeverSpi::OnConnect(int nSocketId, const std::string& strRemoteIP, unsig
 	;
 }
 
-void TCPSeverSpi::OnRecieve(int nSocketId, const char* pData, unsigned int nLen)
+void TCPSeverSpi::OnReceive(int nSocketId, const char* pData, unsigned int nLen)
 {
 	std::cout << "RECV msg:" << pData << ", data len:"<< nLen << std::endl;
 	std::string msg(pData, nLen);
 	Send(nSocketId, msg);
 }
 
-void TCPSeverSpi::OnRecieveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short nRemotePort)
+void TCPSeverSpi::OnReceiveFrom(int nSocketId, const char* pData, unsigned int nLen, const std::string& strRemoteIp, unsigned short nRemotePort)
 {	
 	std::cout << "RECV From:" << strRemoteIp.c_str() << ":" << nRemotePort <<", msg:" << pData << ", data len:" << nLen << std::endl;
 	std::string msg(pData, nLen);
@@ -118,5 +125,10 @@ int TCPSeverSpi::GetPacketHeaderSize()
 int TCPSeverSpi::GetPacketTotalSize(const char* header, int length)
 {
 	return 0;
+}
+
+bool TCPSeverSpi::PacketCheck(const char* packet, int length)
+{
+	return true;
 }
 
