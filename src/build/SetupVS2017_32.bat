@@ -8,6 +8,6 @@ cd %buildDir%
 
 echo Setup Visual Studio 2017 32 bit Solution in %cd%
 
-cmake -DUSE_32BITS=ON -G "Visual Studio 15" ../ASNet  
+cmake -DUSE_32BITS=ON -G "Visual Studio 15" ..
 
 pause
